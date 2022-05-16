@@ -1,35 +1,39 @@
 import socket
+import random
 from threading import Thread
 
 
 FORMAT = 'utf-8'
 IP = "0.0.0.0"
-PORT = 10000
-ADDR = (IP, PORT)
-BUFFER = 1024
+UDP_PORT = 10000
+TCP_PORT = 10001
+UDP_ADDR = (IP, UDP_PORT)
+TCP_ADDR = (IP, TCP_PORT)
+BUFFER_RCV = 4096
+BUFFER_SEND = 1024
+BUFFER_SIZE = 10240
+SAMPLE_SIZE = 52428800
+#BUFFER_SIZE = 10
+#SAMPLE_SIZE = 101
 
-UDPClientSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-#UDPClientSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-UDPClientSocket.bind(ADDR)
+
+UDPSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+UDPSocket.bind(UDP_ADDR)
 
 
-def sender(server_address):
-    while True:
-        msg = input()
-        UDPClientSocket.sendto(msg.encode(FORMAT), server_address)
-
-def receiver():
-    while True:
-        msgFromServer = UDPClientSocket.recvfrom(1024)
-        print(msgFromServer[0].decode(FORMAT), msgFromServer[1])
+def udp_sender(server_addr):
+    data = random.randbytes(SAMPLE_SIZE)
+    data = [data[i:i+BUFFER_SIZE] for i in range(0, len(data), BUFFER_SIZE)]
+    print(len(data))
+    for count, package in enumerate(data):
+        count = count.to_bytes(4, byteorder='little')
+        package = count + package
+        UDPSocket.sendto(package, server_addr)
    
     
-
 if __name__ == '__main__':
-    server_ip = '179.152.187.178'
-    server_port = 10000
-    server_address = (server_ip, server_port)
-    send = Thread(target=sender, args=[server_address])
-    receive = Thread(target=receiver)
-    send.start()
-    receive.start()
+    server_ip = "179.186.140.143"
+    server_udp_port = 10000
+    server_udp_addr = (server_ip, server_udp_port)
+    
+    udp_sender(server_udp_addr)
