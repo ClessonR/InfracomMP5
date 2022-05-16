@@ -11,7 +11,7 @@ UDP_ADDR = (IP, UDP_PORT)
 TCP_ADDR = (IP, TCP_PORT)
 BUFFER_RCV = 4096
 BUFFER_SEND = 1024
-BUFFER_SIZE = 10240
+BUFFER_SIZE = 1024
 SAMPLE_SIZE = 52428800
 #BUFFER_SIZE = 10
 #SAMPLE_SIZE = 101
@@ -29,6 +29,19 @@ def udp_sender(server_addr):
         count = count.to_bytes(4, byteorder='little')
         package = count + package
         UDPSocket.sendto(package, server_addr)
+    print("Done sending")
+        
+
+def udp_receiver():
+    recvd_packeges = []
+    try:
+        while True:
+            msg = UDPSocket.recvfrom(BUFFER_RCV)
+            counter = msg[:4]
+            recvd_packeges.append(counter)
+                
+    except KeyboardInterrupt:
+        print(f"recvd_packeges: {len(recvd_packeges)}")
    
     
 if __name__ == '__main__':
@@ -37,3 +50,4 @@ if __name__ == '__main__':
     server_udp_addr = (server_ip, server_udp_port)
     
     udp_sender(server_udp_addr)
+    udp_receiver()

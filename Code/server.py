@@ -29,6 +29,17 @@ def udp_receiver():
                 
     except KeyboardInterrupt:
         print(f"recvd_packeges: {len(recvd_packeges)}")
+
+
+def udp_sender(server_addr):
+    data = random.randbytes(SAMPLE_SIZE)
+    data = [data[i:i+BUFFER_SEND] for i in range(0, len(data), BUFFER_SEND)]
+    print(len(data))
+    for count, package in enumerate(data):
+        count = count.to_bytes(4, byteorder='little')
+        package = count + package
+        UDPSocket.sendto(package, server_addr)
+    print("Done sending")
    
 
 if __name__ == '__main__':
@@ -37,3 +48,4 @@ if __name__ == '__main__':
     client_udp_addr = (client_ip, client_udp_port)
     
     udp_receiver()
+    udp_sender(client_udp_addr)
