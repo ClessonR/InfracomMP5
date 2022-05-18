@@ -32,11 +32,12 @@ def sender(UDPSocket: socket.socket, TCPSocket: socket.socket, server_addr):
     print("TCP transmission has been completed.")
 
 
-def stop_receiver(TCPSocket: socket.socket, stopReceived: threading.Event):
+def stop_receiver(TCPSocket: socket.socket, stopReceived: threading.Event, dto: list):
     msg = TCPSocket.recv(4)
-    packages_sent = int.from_bytes(msg, byteorder="little")
+    packages_sent_count = int.from_bytes(msg, byteorder="little")
+    dto.append(packages_sent_count)
 
-    print(f"Amount of packages sent: {packages_sent}")
+    print(f"Amount of packages that should have been received: {packages_sent_count}")
 
     stopReceived.set()
 
@@ -52,19 +53,32 @@ def receiver(UDPSocket: socket.socket, TCPSocket: socket.socket):
     received_packages = []
     stopReceived = threading.Event()
 
+    dto = []  # Data Transfer Object
+
     stop_receiver_thread = threading.Thread(
-        target=stop_receiver, args=[TCPSocket, stopReceived]
+        target=stop_receiver, args=[TCPSocket, stopReceived, dto]
     )
     stop_receiver_thread.start()
 
     print("Initiating UDP reception...")
+    initial_time = time.perf_counter()
+    total_size = 0
     while not stopReceived.is_set():
         if isReadReady(UDPSocket, timeout=1):
             msg = UDPSocket.recvfrom(BUFFER_RCV)
+            total_size += len(msg)
             counter = msg[:4]
             received_packages.append(counter)
+    elapsed_time = time.perf_counter() - initial_time
     print("The flag has been detected. UDP reception has been completed.")
 
+    packages_sent_count = dto[0]
+
     print(f"Amount of packages received: {len(received_packages)}")
+    print(
+        f"Rate of loss: {((packages_sent_count - len(received_packages)) / packages_sent_count) * 100:.2f}%"
+    )
+    print(f"Download time: {elapsed_time} seconds.")
+    print(f"Download speed: {(total_size / elapsed_time)} bytes/second.")
 
     stop_receiver_thread.join()
