@@ -1,32 +1,39 @@
 import socket
+import logging
 
 from common import sender, receiver
 
 FORMAT = "utf-8"
 IP = "0.0.0.0"
-UDP_PORT = 10000
-TCP_PORT = 10001
-UDP_ADDR = (IP, UDP_PORT)
-TCP_ADDR = (IP, TCP_PORT)
+PORT = 10000
+ADDR = (IP, PORT)
+
+LOG_LEVEL = logging.INFO
+
+logging.basicConfig(level=LOG_LEVEL)
 
 
 UDPSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-UDPSocket.bind(UDP_ADDR)
+UDPSocket.bind(ADDR)
+logging.info(f"UDP Socket binded to {IP}:{PORT}")
 
 TCPSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
-TCPSocket.bind(TCP_ADDR)
+TCPSocket.bind(ADDR)
+logging.info(f"TCP Socket binded to {IP}:{PORT}")
 
 
 if __name__ == "__main__":
-    client_ip = "localhost"
-    client_udp_port = 10002
-    client_udp_addr = (client_ip, client_udp_port)
-
+    client_port = int(input("Enter the port of the client: "))
+    logging.info("Waiting for connection...")
     TCPSocket.listen(1)
-    conn, addr = TCPSocket.accept()
+    conn, client_addr = TCPSocket.accept()
+    logging.info(f"TCP Connection from {client_addr[0]}:{client_addr[1]} has been established.")
+
+    client_ip = client_addr[0]
+    client_addr = (client_ip, client_port)
 
     receiver(UDPSocket, conn)
-    sender(UDPSocket, conn, client_udp_addr)
+    sender(UDPSocket, conn, client_addr)
 
     conn.close()
     TCPSocket.close()
